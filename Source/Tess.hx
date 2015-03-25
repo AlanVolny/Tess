@@ -442,22 +442,21 @@ class TPiece {
 		var pfield = PlayField.mf;
 
 		//erase any existing future
-		var prev_path;
-		if (paths.length>0){
-			prev_path = paths[paths.length-1];
-			prev_path.future.remove_from_board();
+		for (p in paths){
+			destroy_path(p);
 		}
-		else prev_path = null;
+		paths = [];
 
 		//make new piece
 		var newpiece = new TPiece(dat, pnum);
 		var newpath = newpiece.place(pos);
 		paths.push( newpath );
 
-		if (prev_path!=null){
-			var pd = new PathDelta(this, prev_path, newpath);
-			pd.add_to_turn();
-		}
+		//remember the action so we can undo it
+		// if (prev_path!=null){
+		// 	var pd = new PathDelta(this, prev_path, newpath);
+		// 	pd.add_to_turn();
+		// }
 
 		newpiece.propogate(PlayField.mf);
 	}
@@ -495,31 +494,31 @@ class TPiece {
 			PlayField.mf.play_boards[t].pieces.remove(this);
 			PlayField.mf.boards_canvas.removeChild(img);
 			img = null;
-			displayed = false;
 			for (p in paths){
-				destroy_path(p);
+				if (p.type=='move')
+					p.future.remove_from_board();
 			}
 			if (victim!=null)
 				victim.unkill();
-			// paths = [];
 			return;
 		}
 
 		if (PlayField.debug==true)trace('rm: MF not yet implemented');
 	}
 
+	//this piece kills another piece
 	public function kill_piece(victim:TPiece) {
 		if (PlayField.debug==true)trace('killing unit at ', x,y,t);
 		var deathpath = {type:'death', future:this};
 
-		var past = victim.get_past();
-		var curpath = past.paths[past.paths.length-1];
+		var vict_past = victim.get_past();
+		var curpath = vict_past.paths[vict_past.paths.length-1];
 		// curpath.future.remove_from_board();
-		var PD = new PathDelta(past, curpath, deathpath);
+		var PD = new PathDelta(vict_past, curpath, deathpath);
 		PD.add_to_turn();
 
 		victim.remove_from_board();
-		past.paths.push( deathpath );
+		vict_past.paths.push( deathpath );
 	}
 
 	public function unkill(){
@@ -544,21 +543,27 @@ class TPiece {
 
 		if (path==null) return;
 
-		var future = path.future;
-		if (future!=null) {
+		if (path.type=='move'){
 
-			//remove from play
-			future.remove_from_board();
+			var future = path.future;
+			if (future!=null) {
 
-			//clean up
-			pfield.boards_canvas.removeChild(future.img);
-			future.is_removed = true;
-			future.img=null;
+				//remove from play
+				future.remove_from_board();
 
-			for (subpath in future.paths){
-				destroy_path(subpath);
+				//clean up
+				future.is_removed = true;
+				future.img=null;
+
+				for (subpath in future.paths){
+					destroy_path(subpath);
+				}
+				future.paths=[];
 			}
-			future.paths=[];
+		}
+		if (path.type=='death'){
+			//just ignore it
+			return;
 		}
 	}
 
@@ -652,7 +657,14 @@ class TPiece {
 
 	public function get_future(): TPiece {
 		if (paths.length==0) return null;
-		return paths[paths.length-1].future;
+		for (p in paths){
+			if (p.type=='death'){
+				trace('got a death');
+				continue;
+			}
+			return p.future; 
+		}
+		return null;
 	}
 
 
@@ -766,11 +778,6 @@ class Indicator {
 		PlayField.mf.selected_piece = null;
 		PlayField.mf.remove_indics();
 
-		if (PlayField.debug){
-			PlayField.mf.term_display();
-			PlayField.mf.gamedat.print_actions();
-		}
-
 		//start new turn
 		var turns = PlayField.mf.gamedat.turns;
 		while ( PlayField.mf.gamedat.turns.length-1 > PlayField.mf.turn_num)
@@ -778,11 +785,19 @@ class Indicator {
 		var newturn_num = turns[ turns.length-1 ].num+1;
 		PlayField.mf.turn_num += 1;
 		turns.push( new TurnData( newturn_num ) );
-		trace(' --- turn ' + PlayField.mf.turn_num + ' --- ');
+
+		if (PlayField.debug){
+			PlayField.mf.term_display();
+			// PlayField.mf.gamedat.print_actions(); //for undoing
+			trace(' --- turn ' + PlayField.mf.turn_num + ' --- ');
+		}
+
 	}
 
 }
 
+
+//for undoing, redoing turns (not done yet)
 class PathDelta {
 	public var base_piece:TPiece;
 	public var old_path:Path;
