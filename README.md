@@ -8,10 +8,11 @@ There is one board, but multiple slices of it through time; board at t=0, t=1, t
 
 ====================
 
-Dependencies:
+**Dependencies:**
+
 [openfl](http://www.openfl.org/) 2.1.5 (3 currently has some issues)
 
-Downloads will be add later.
+Downloads will be added later.
 
 ====================
 
