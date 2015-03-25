@@ -8,6 +8,13 @@ There is one board, but multiple slices of it through time; board at t=0, t=1, t
 
 ====================
 
+Dependencies:
+[openfl](http://www.openfl.org/) 2.1.5 (3 currently has some issues)
+
+Downloads will be add later.
+
+====================
+
 **Curent setup**
 
 The point of the game is to get one of your pawns to the opposite side (victory condition not implemented). No AI, human v human only.
