@@ -1,10 +1,11 @@
 Tess - time chess
 =
-====================
 
 A meta-time boardgame (experiment).
 
 There is one board, but multiple slices of it through time; board at t=0, t=1, t=2, and so on. Any changes to board|t=2 propagates to board|t=3, which propagates to board|t=4, which propagates to board|t=5 and so on.
+
+[Download, for windows](https://drive.google.com/file/d/0BzJxnQtuUhePS1psUHc0NW1BV3M/view?usp=sharing)
 
 ====================
 
